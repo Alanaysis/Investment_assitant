@@ -154,6 +154,64 @@ npm run dev
 | 005827 | 易方达蓝筹精选混合 | 场外基金 |
 | 001938 | 中欧时代先锋 | 场外基金 |
 
+## 部署
+
+本项目支持分别部署到 Render（后端）和 Vercel（前端）。
+
+### 后端 → Render
+
+1. 在 [Render Dashboard](https://dashboard.render.com/) 新建 **Web Service**，选择仓库
+2. 配置项（也可使用根目录 `render.yaml` 自动同步）：
+   - **Runtime**: Python 3
+   - **Root Directory**: `backend`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn -c gunicorn_config.py app.main:app`
+   - **Plan**: Free（512MB 内存，临时磁盘 — SQLite 数据在重新部署时会丢失，可接受）
+3. 环境变量：
+   - `ALLOWED_ORIGINS`: 填入 Vercel 前端域名（逗号分隔），例如
+     `https://chicken-assistant.vercel.app`
+   - `PYTHON_VERSION`: `3.11.9`
+4. 部署后获得后端地址 `https://<your-service>.onrender.com`
+
+> 说明：Render 通过 `PORT` 环境变量注入端口，`gunicorn_config.py` 会自动读取。
+> 若需持久化 SQLite，可挂载 Disk 到 `/var/data` 并设置 `RENDER_DATA_DIR=/var/data`。
+
+### 前端 → Vercel
+
+1. 在 [Vercel](https://vercel.com/) 导入仓库
+2. 配置项：
+   - **Framework Preset**: Vite
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`（`vercel.json` 已配置 SPA rewrite）
+3. 环境变量：
+   - `VITE_API_URL`: 后端地址，例如 `https://<your-service>.onrender.com`
+4. 部署后获得前端地址 `https://<your-project>.vercel.app`
+
+### 连接两边
+
+1. 在 Render 后端设置 `ALLOWED_ORIGINS` 为 Vercel 前端域名
+2. 在 Vercel 前端设置 `VITE_API_URL` 为 Render 后端域名
+3. 重新部署两端使配置生效
+
+### 本地开发
+
+后端：
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+前端：
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+默认情况下无需配置任何环境变量即可本地运行（API 指向 `http://localhost:8000`，CORS 允许本地端口）。
+
 ## License
 
 MIT

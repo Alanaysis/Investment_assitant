@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: chicken-assistant-api
+    runtime: python
+    plan: free
+    region: singapore
+    branch: main
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -c gunicorn_config.py app.main:app
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: RENDER_DATA_DIR
+        value: /var/data
+    disk:
+      name: fund-data
+      mountPath: /var/data
+      sizeGB: 1
