@@ -1,210 +1,183 @@
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+// 静态版本 API 层：所有数据来自 public/data/*.json，全部计算在浏览器内完成。
+// 不再依赖任何后端服务，适配 GitHub Pages 部署。
 
-export interface FundInfo {
-  fund_code: string;
-  fund_name: string;
-  fund_type: string | null;
-  establish_date: string | null;
-  manager_name: string | null;
-  fund_scale: number | null;
-  fee_rate: number | null;
-  data_count?: number;
-}
+import type {
+  FundInfo,
+  FundData,
+  PopularFund,
+  BacktestRequest,
+  BacktestResponse,
+  ScoredFund,
+  PortfolioHolding,
+  PortfolioBacktestResponse,
+  FetchRequest,
+  FetchResponse,
+  BatchFetchResult,
+  BatchFetchResponse,
+} from './types';
+import { runDcaBacktest } from './backtest';
+import { runPortfolioBacktest as runPortfolioBacktestLocal } from './portfolio';
+import { scoreFund } from './scoring';
 
-export interface FetchRequest {
-  fund_code: string;
-  days: number;
-}
+// ===== 类型 re-export（保持页面 import 路径不变）=====
+export type {
+  FundInfo,
+  FundData,
+  PopularFund,
+  BacktestRequest,
+  BacktestResponse,
+  ScoredFund,
+  ScoreDetail,
+  PortfolioHolding,
+  PortfolioHoldingResult,
+  PortfolioRecord,
+  PortfolioBacktestResponse,
+  BacktestPeriod,
+  NavRecord,
+  KlineRecord,
+  FetchRequest,
+  FetchResponse,
+  BatchFetchResult,
+  BatchFetchResponse,
+} from './types';
 
-export interface FetchResponse {
-  fund_code: string;
-  fund_type: string;
-  fund_name: string;
-  records_fetched: number;
-  message: string;
-}
+// ===== 本地数据缓存 =====
+const fundDataCache = new Map<string, FundData>();
 
-export interface BacktestRequest {
-  fund_code: string;
-  period: 'daily' | 'weekly' | 'biweekly' | 'monthly';
-  amount: number;
-  days: number;
-}
+// ===== 基础数据读取 =====
 
-export interface InvestRecord {
-  date: string;
-  price: number;
-  shares: number;
-  total_cost: number;
-}
-
-export interface BacktestResponse {
-  fund_code: string;
-  fund_type: string;
-  period: string;
-  amount_per_invest: number;
-  invest_count: number;
-  total_cost: number;
-  final_value: number;
-  total_return_pct: number;
-  annual_return_pct: number;
-  max_drawdown_pct: number;
-  invest_records: InvestRecord[];
-  error?: string;
-}
-
+/** 加载基金列表（funds.json） */
 export async function fetchFunds(): Promise<FundInfo[]> {
-  const res = await fetch(`${API_BASE}/funds/list`);
+  const res = await fetch('./data/funds.json');
   if (!res.ok) throw new Error('获取基金列表失败');
   return res.json();
 }
 
-export async function fetchFundData(req: FetchRequest): Promise<FetchResponse> {
-  const res = await fetch(`${API_BASE}/funds/fetch`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(req),
-  });
-  if (!res.ok) throw new Error('拉取基金数据失败');
-  return res.json();
-}
-
-export async function runBacktest(req: BacktestRequest): Promise<BacktestResponse> {
-  const res = await fetch(`${API_BASE}/backtest/dca`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(req),
-  });
-  if (!res.ok) throw new Error('回测请求失败');
-  return res.json();
-}
-
-export interface ScoreDetail {
-  annual_return: number | null;
-  total_return: number | null;
-  return_3m: number | null;
-  return_1m: number | null;
-  max_drawdown: number | null;
-  volatility: number | null;
-  sharpe: number | null;
-  fund_scale: number | null;
-  fee_rate: number | null;
-  manager_name: string | null;
-}
-
-export interface ScoredFund {
-  fund_code: string;
-  fund_name: string;
-  fund_type: string;
-  total_score: number;
-  return_score: number;
-  risk_score: number;
-  basic_score: number;
-  return_details: ScoreDetail;
-  risk_details: ScoreDetail;
-  basic_details: ScoreDetail;
-  rank?: number;
-}
-
-export async function fetchScoringRank(fundType?: string): Promise<ScoredFund[]> {
-  const params = new URLSearchParams();
-  if (fundType) params.set('fund_type', fundType);
-  const res = await fetch(`${API_BASE}/scoring/rank?${params}`);
-  if (!res.ok) throw new Error('获取评分排名失败');
-  return res.json();
-}
-
-export async function fetchScoreDetail(fundCode: string): Promise<ScoredFund> {
-  const res = await fetch(`${API_BASE}/scoring/${fundCode}/detail`);
-  if (!res.ok) throw new Error('获取评分详情失败');
-  return res.json();
-}
-
-// 热门基金
-export interface PopularFund {
-  code: string;
-  name: string;
-}
-
+/** 加载热门基金列表（popular.json） */
 export async function fetchPopularFunds(): Promise<PopularFund[]> {
-  const res = await fetch(`${API_BASE}/funds/popular`);
+  const res = await fetch('./data/popular.json');
   if (!res.ok) throw new Error('获取热门基金失败');
   return res.json();
 }
 
-// 批量拉取
-export interface BatchFetchResult {
-  fund_code: string;
-  fund_name: string;
-  fund_type: string;
-  records_fetched: number;
-  status: string;
+/** 加载单只基金明细数据（{code}.json），结果缓存在 Map 中避免重复请求。 */
+export async function fetchFundData(code: string): Promise<FundData> {
+  const cached = fundDataCache.get(code);
+  if (cached) return cached;
+
+  const res = await fetch(`./data/${code}.json`);
+  if (!res.ok) {
+    throw new Error(`基金 ${code} 数据未预置（静态版本不支持实时拉取）`);
+  }
+  const data: FundData = await res.json();
+  fundDataCache.set(code, data);
+  return data;
 }
 
-export interface BatchFetchResponse {
-  total: number;
-  success: number;
-  failed: number;
-  results: BatchFetchResult[];
+// ===== 定投回测 =====
+
+/** 单基金定投回测：本地加载数据后调用 backtest.runDcaBacktest */
+export async function runBacktest(req: BacktestRequest): Promise<BacktestResponse> {
+  try {
+    const fundData = await fetchFundData(req.fund_code);
+    return runDcaBacktest(fundData, {
+      period: req.period,
+      amount: req.amount,
+      days: req.days,
+    });
+  } catch (err) {
+    return {
+      fund_code: req.fund_code,
+      fund_type: '',
+      period: req.period,
+      amount_per_invest: req.amount,
+      invest_count: 0,
+      total_cost: 0,
+      final_value: 0,
+      total_return_pct: 0,
+      annual_return_pct: 0,
+      max_drawdown_pct: 0,
+      invest_records: [],
+      error: err instanceof Error ? err.message : '回测失败',
+    };
+  }
 }
 
-export async function batchFetchFunds(fundCodes: string[], usePopular: boolean, days: number): Promise<BatchFetchResponse> {
-  const res = await fetch(`${API_BASE}/funds/batch-fetch`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fund_codes: fundCodes, use_popular: usePopular, days }),
-  });
-  if (!res.ok) throw new Error('批量拉取失败');
-  return res.json();
-}
+// ===== 组合回测 =====
 
-// 组合回测
-export interface PortfolioHolding {
-  fund_code: string;
-  weight: number;
-}
-
-export interface PortfolioHoldingResult {
-  fund_code: string;
-  fund_name: string;
-  fund_type: string;
-  weight: number;
-  total_cost: number;
-  market_value: number;
-  return_pct: number;
-}
-
-export interface PortfolioRecord {
-  date: string;
-  total_cost: number;
-  portfolio_value: number;
-}
-
-export interface PortfolioBacktestResponse {
-  holdings: PortfolioHoldingResult[];
-  period: string;
-  total_amount_per_invest: number;
-  invest_count: number;
-  total_cost: number;
-  final_value: number;
-  total_return_pct: number;
-  annual_return_pct: number;
-  max_drawdown_pct: number;
-  portfolio_records: PortfolioRecord[];
-  error?: string;
-}
-
+/** 组合定投回测：加载所有持仓基金数据后调用 portfolio.runPortfolioBacktest */
 export async function runPortfolioBacktest(
   holdings: PortfolioHolding[],
   period: string,
   totalAmount: number,
   days: number
 ): Promise<PortfolioBacktestResponse> {
-  const res = await fetch(`${API_BASE}/portfolio/backtest`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ holdings, period, total_amount: totalAmount, days }),
-  });
-  if (!res.ok) throw new Error('组合回测请求失败');
-  return res.json();
+  try {
+    const fundsData: FundData[] = [];
+    for (const h of holdings) {
+      const fd = await fetchFundData(h.fund_code);
+      fundsData.push(fd);
+    }
+    return runPortfolioBacktestLocal(
+      fundsData,
+      holdings,
+      period as 'daily' | 'weekly' | 'biweekly' | 'monthly',
+      totalAmount,
+      days
+    );
+  } catch (err) {
+    return {
+      holdings: [],
+      period,
+      total_amount_per_invest: totalAmount,
+      invest_count: 0,
+      total_cost: 0,
+      final_value: 0,
+      total_return_pct: 0,
+      annual_return_pct: 0,
+      max_drawdown_pct: 0,
+      portfolio_records: [],
+      error: err instanceof Error ? err.message : '组合回测失败',
+    };
+  }
+}
+
+// ===== 评分 =====
+
+/**
+ * 评分排名：加载 funds.json 与每只基金明细，调用 scoring.scoreFund 后按总分降序。
+ * fundType 为可选类型过滤（'ETF' / '场外基金' / undefined）。
+ */
+export async function fetchScoringRank(fundType?: string): Promise<ScoredFund[]> {
+  const funds = await fetchFunds();
+
+  const scored: ScoredFund[] = [];
+  for (const fund of funds) {
+    try {
+      const fd = await fetchFundData(fund.fund_code);
+      scored.push(scoreFund(fund, fd));
+    } catch {
+      // 跳过缺失数据的基金
+    }
+  }
+
+  // fundType === 'ETF' 仅保留 ETF；'场外基金' 保留非 ETF；undefined 保留全部
+  const filtered = fundType
+    ? fundType === 'ETF'
+      ? scored.filter((s) => s.fund_type === 'ETF')
+      : scored.filter((s) => s.fund_type !== 'ETF')
+    : scored;
+
+  filtered.sort((a, b) => b.total_score - a.total_score);
+  filtered.forEach((s, i) => (s.rank = i + 1));
+  return filtered;
+}
+
+/** 单只基金评分详情：加载 fund data + fund info 后调用 scoreFund。 */
+export async function fetchScoreDetail(fundCode: string): Promise<ScoredFund> {
+  const funds = await fetchFunds();
+  const fund = funds.find((f) => f.fund_code === fundCode);
+  if (!fund) throw new Error(`基金 ${fundCode} 不在列表中`);
+  const fd = await fetchFundData(fundCode);
+  return scoreFund(fund, fd);
 }

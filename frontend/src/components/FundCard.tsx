@@ -1,13 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, X, Building2, BarChart3, Database, AlertCircle } from 'lucide-react';
+import { TrendingUp, Building2, BarChart3, Database } from 'lucide-react';
 import type { FundInfo } from '@/lib/api';
 
 interface FundCardProps {
   fund: FundInfo;
-  onRemove: (code: string) => void;
 }
 
-export default function FundCard({ fund, onRemove }: FundCardProps) {
+export default function FundCard({ fund }: FundCardProps) {
   const navigate = useNavigate();
   const isETF = fund.fund_type === 'ETF';
   const dataCount = fund.data_count ?? 0;
@@ -31,14 +30,6 @@ export default function FundCard({ fund, onRemove }: FundCardProps) {
         e.currentTarget.style.background = 'var(--bg-card)';
       }}
     >
-      <button
-        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded"
-        style={{ color: 'var(--text-muted)' }}
-        onClick={(e) => { e.stopPropagation(); onRemove(fund.fund_code); }}
-      >
-        <X size={14} />
-      </button>
-
       <div className="flex items-center gap-2 mb-3">
         {isETF ? (
           <BarChart3 size={16} style={{ color: 'var(--accent)' }} />
@@ -68,17 +59,8 @@ export default function FundCard({ fund, onRemove }: FundCardProps) {
         <div className="flex items-center gap-1 text-xs" style={{
           color: hasData ? 'var(--accent)' : 'var(--coral)'
         }}>
-          {hasData ? (
-            <>
-              <Database size={12} />
-              <span>{dataCount} 条数据</span>
-            </>
-          ) : (
-            <>
-              <AlertCircle size={12} />
-              <span>无数据</span>
-            </>
-          )}
+          <Database size={12} />
+          <span>{dataCount} 条数据</span>
         </div>
       </div>
     </div>

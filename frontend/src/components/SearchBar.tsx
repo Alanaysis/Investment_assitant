@@ -1,33 +1,20 @@
 import { useState } from 'react';
-import { Search, Loader2 } from 'lucide-react';
-import { fetchFundData } from '@/lib/api';
+import { Search } from 'lucide-react';
 import { useFundStore } from '@/hooks/useFundStore';
 
 export default function SearchBar() {
   const [query, setQuery] = useState('');
-  const [fetching, setFetching] = useState(false);
   const [message, setMessage] = useState('');
-  const addFund = useFundStore((s) => s.addFund);
-  const setFunds = useFundStore((s) => s.setFunds);
   const funds = useFundStore((s) => s.funds);
 
-  const handleFetch = async () => {
+  const handleSearch = () => {
     const code = query.trim();
     if (!code) return;
-    setFetching(true);
-    setMessage('');
-    try {
-      const res = await fetchFundData({ fund_code: code, days: 730 });
-      setMessage(res.message);
-      // Refresh fund list
-      const { fetchFunds } = await import('@/lib/api');
-      const updated = await fetchFunds();
-      setFunds(updated);
-    } catch (err) {
-      setMessage('拉取失败，请检查基金代码');
-    } finally {
-      setFetching(false);
-      setQuery('');
+    const found = funds.some((f) => f.fund_code === code);
+    if (found) {
+      setMessage(`已找到基金 ${code}，可在下方列表点击进入回测`);
+    } else {
+      setMessage('该基金数据未预置，静态版本不支持实时拉取');
     }
   };
 
@@ -39,8 +26,8 @@ export default function SearchBar() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleFetch()}
-          placeholder="输入基金代码，如 110011 或 510300"
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          placeholder="输入基金代码查找，如 110011 或 510300"
           className="w-full pl-11 pr-28 py-3.5 rounded-xl text-sm outline-none transition-all duration-200"
           style={{
             background: 'var(--bg-card)',
@@ -51,16 +38,14 @@ export default function SearchBar() {
           onBlur={(e) => { e.target.style.borderColor = 'var(--border)'; }}
         />
         <button
-          onClick={handleFetch}
-          disabled={fetching}
-          className="absolute right-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2"
+          onClick={handleSearch}
+          className="absolute right-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
           style={{
-            background: fetching ? 'var(--accent-dim)' : 'var(--accent)',
+            background: 'var(--accent)',
             color: 'var(--bg-primary)',
           }}
         >
-          {fetching ? <Loader2 size={14} className="animate-spin" /> : null}
-          {fetching ? '拉取中' : '拉取数据'}
+          查找
         </button>
       </div>
       {message && (

@@ -1,0 +1,212 @@
+[
+  {
+    "fund_code": "001938",
+    "fund_name": "中欧时代先锋",
+    "fund_type": "股票型-普通",
+    "establish_date": null,
+    "manager_name": "罗佳明 周蔚文",
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "003834",
+    "fund_name": "华夏能源革新股票",
+    "fund_type": "股票型-普通",
+    "establish_date": null,
+    "manager_name": "杨宇",
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "005827",
+    "fund_name": "易方达蓝筹精选混合",
+    "fund_type": "混合型-偏股",
+    "establish_date": null,
+    "manager_name": "张坤 何一铖 杨思亮",
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "007028",
+    "fund_name": "易方达中证500ETF联接A",
+    "fund_type": "股票型-标准指数",
+    "establish_date": null,
+    "manager_name": "余海燕 庞亚平",
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "012552",
+    "fund_name": "天弘中证芯片指数A",
+    "fund_type": "股票型-标准指数",
+    "establish_date": null,
+    "manager_name": "洪明华",
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "040046",
+    "fund_name": "华安纳斯达克100指数A",
+    "fund_type": "QDII-股票",
+    "establish_date": null,
+    "manager_name": "倪斌",
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "110011",
+    "fund_name": "易方达优质精选混合（QDII）",
+    "fund_type": "QDII-混合",
+    "establish_date": null,
+    "manager_name": "张坤 彭珂",
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "110020",
+    "fund_name": "易方达沪深300ETF联接A",
+    "fund_type": "股票型-标准指数",
+    "establish_date": null,
+    "manager_name": "余海燕 庞亚平",
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "159246",
+    "fund_name": "创业板人工智能ETF富国",
+    "fund_type": "ETF",
+    "establish_date": null,
+    "manager_name": null,
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 237
+  },
+  {
+    "fund_code": "159915",
+    "fund_name": "创业板ETF易方达",
+    "fund_type": "ETF",
+    "establish_date": null,
+    "manager_name": null,
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "159995",
+    "fund_name": "芯片ETF华夏",
+    "fund_type": "ETF",
+    "establish_date": null,
+    "manager_name": null,
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "161725",
+    "fund_name": "招商中证白酒指数",
+    "fund_type": "股票型-标准指数",
+    "establish_date": null,
+    "manager_name": "侯昊",
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "510300",
+    "fund_name": "沪深300ETF华泰柏瑞",
+    "fund_type": "ETF",
+    "establish_date": null,
+    "manager_name": null,
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 485
+  },
+  {
+    "fund_code": "510500",
+    "fund_name": "中证500ETF南方",
+    "fund_type": "ETF",
+    "establish_date": null,
+    "manager_name": null,
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "512100",
+    "fund_name": "中证1000ETF南方",
+    "fund_type": "ETF",
+    "establish_date": null,
+    "manager_name": null,
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "512170",
+    "fund_name": "医疗ETF华宝",
+    "fund_type": "ETF",
+    "establish_date": null,
+    "manager_name": null,
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "512660",
+    "fund_name": "军工ETF国泰",
+    "fund_type": "ETF",
+    "establish_date": null,
+    "manager_name": null,
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "512690",
+    "fund_name": "酒ETF鹏华",
+    "fund_type": "ETF",
+    "establish_date": null,
+    "manager_name": null,
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "515790",
+    "fund_name": "光伏ETF华泰柏瑞",
+    "fund_type": "ETF",
+    "establish_date": null,
+    "manager_name": null,
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  },
+  {
+    "fund_code": "562590",
+    "fund_name": "半导体设备ETF华夏",
+    "fund_type": "ETF",
+    "establish_date": null,
+    "manager_name": null,
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 484
+  },
+  {
+    "fund_code": "588000",
+    "fund_name": "科创50ETF华夏",
+    "fund_type": "ETF",
+    "establish_date": null,
+    "manager_name": null,
+    "fund_scale": null,
+    "fee_rate": null,
+    "data_count": 483
+  }
+]

@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import ReactECharts from 'echarts-for-react';
-import { ArrowLeft, Play, Loader2, RefreshCw } from 'lucide-react';
-import { runBacktest, fetchFundData } from '@/lib/api';
-import { useFundStore } from '@/hooks/useFundStore';
+import { ArrowLeft, Play, Loader2 } from 'lucide-react';
+import { runBacktest } from '@/lib/api';
 import type { BacktestResponse } from '@/lib/api';
 
 export default function Backtest() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const funds = useFundStore((s) => s.funds);
 
   const initialCode = params.get('fund') || '';
   const [fundCode, setFundCode] = useState(initialCode);
@@ -19,7 +17,6 @@ export default function Backtest() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<BacktestResponse | null>(null);
   const [error, setError] = useState('');
-  const [refetching, setRefetching] = useState(false);
 
   useEffect(() => {
     if (initialCode) setFundCode(initialCode);
@@ -53,20 +50,6 @@ export default function Backtest() {
       setError('回测请求失败');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleRefetchData = async () => {
-    if (!fundCode.trim()) return;
-    setRefetching(true);
-    try {
-      await fetchFundData({ fund_code: fundCode.trim(), days: 730 });
-      // 重新运行回测
-      await handleRun();
-    } catch {
-      setError('重新拉取数据失败');
-    } finally {
-      setRefetching(false);
     }
   };
 
@@ -260,16 +243,7 @@ export default function Backtest() {
           <div className="flex-1 min-w-0 space-y-5">
             {error && (
               <div className="rounded-xl p-4" style={{ background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.3)' }}>
-                <p className="text-sm mb-3" style={{ color: 'var(--coral)' }}>{error}</p>
-                <button
-                  onClick={handleRefetchData}
-                  disabled={refetching}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all"
-                  style={{ background: 'var(--accent)', color: 'var(--bg-primary)' }}
-                >
-                  {refetching ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                  {refetching ? '拉取中...' : '重新拉取数据并回测'}
-                </button>
+                <p className="text-sm" style={{ color: 'var(--coral)' }}>{error}</p>
               </div>
             )}
 
